@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CarbonoQuest PRO: El Pilar de la Vida</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a; --panel-bg: rgba(30, 41, 59, 0.9); --text-color: #f1f5f9;
+            --accent: #38bdf8; --secondary: #fbbf24; --correct: #4ade80; --error: #f87171;
+            --btn-bg: #1e293b; --highlight: rgba(56, 189, 248, 0.15);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        header { text-align: center; width: 100%; max-width: 1000px; margin-bottom: 20px; }
+        h1 { margin: 0; color: var(--accent); font-size: 2rem; text-shadow: 0 0 10px rgba(56,189,248,0.3); }
+        
+        nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1000px; margin-bottom: 20px; }
+        nav button { background: var(--btn-bg); color: var(--text-color); border: 1px solid rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; flex: 1 1 auto; transition: all 0.3s; }
+        nav button.active-nav { background: var(--accent); color: #0f172a; transform: translateY(-2px); }
+        nav button.btn-eval { background: #e11d48; }
+        nav button.btn-game { background: #d97706; }
+
+        main { width: 100%; max-width: 1000px; }
+        .section { display: none; background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 25px; animation: slideIn 0.4s ease-out; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .section.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: var(--accent); border-left: 4px solid var(--accent); padding-left: 15px; margin-top: 0; }
+        h3 { color: var(--secondary); margin-top: 25px; display: flex; align-items: center; gap: 10px; }
+        .formula-card { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid var(--btn-bg); margin: 10px 0; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--btn-bg); padding: 12px; text-align: left; }
+        th { background-color: var(--btn-bg); color: var(--accent); }
+
+        .login-box { text-align: center; padding: 20px; }
+        input { padding: 14px; margin: 10px; font-size: 1rem; border-radius: 10px; border: 2px solid var(--btn-bg); background: #020617; color: white; width: 100%; max-width: 320px; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .action-btn { background-color: var(--correct); color: #0f172a; border: none; padding: 15px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 100%; max-width: 320px; transition: 0.3s; }
+        .action-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        .resultado { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; text-align: center; font-weight: bold; border: 2px solid transparent; }
+        .hit { background: rgba(74, 222, 128, 0.2); color: var(--correct); border-color: var(--correct); }
+        .miss { background: rgba(248, 113, 113, 0.2); color: var(--error); border-color: var(--error); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CarbonoQuest PRO</h1>
+        <p>Dominando la Química del Carbono</p>
+    </header>
+
+    <nav id="nav-menu">
+        <button onclick="showSection('propiedades', this)" class="active-nav">Propiedades</button>
+        <button onclick="showSection('formulas', this)">Fórmulas</button>
+        <button onclick="showSection('evaluacion', this)" class="btn-eval">Examen</button>
+        <button onclick="showSection('juego', this)" class="btn-game">Misión</button>
+        <button onclick="showSection('admin', this)">Admin</button>
+    </nav>
+
+    <main>
+        <section id="propiedades" class="section active">
+            <h2>Propiedades Atómicas del Carbono</h2>
+            <p>El Carbono (Z=6) es el elemento base de la vida debido a su configuración electrónica 1s<sup>2</sup> 2s<sup>2</sup> 2p<sup>2</sup>, que le permite una versatilidad de enlace única.</p>
+
+            <h3><i class="fas fa-atom"></i> La Tetravalencia</h3>
+            <p>En su estado excitado, el carbono puede formar <strong>4 enlaces covalentes</strong>. Esto no solo le permite unirse a otros elementos, sino construir redes tridimensionales infinitas.</p>
+            
+            <h3><i class="fas fa-project-diagram"></i> Hibridación de Orbitales</h3>
+            <p>El carbono hibrida sus orbitales para adaptarse a diferentes geometrías moleculares:</p>
+            
+
+[Image of carbon hybridization sp3 sp2 sp]
+
+            <table>
+                <tr><th>Hibridación</th><th>Enlaces</th><th>Geometría</th><th>Ángulo</th></tr>
+                <tr><td><strong>sp<sup>3</sup></strong></td><td>4 Sencillos (&sigma;)</td><td>Tetraédrica</td><td>109.5°</td></tr>
+                <tr><td><strong>sp<sup>2</sup></strong></td><td>1 Doble, 2 Sencillos</td><td>Trigonal Plana</td><td>120°</td></tr>
+                <tr><td><strong>sp</strong></td><td>1 Triple, 1 Sencillo</td><td>Lineal</td><td>180°</td></tr>
+            </table>
+
+            <h3><i class="fas fa-link"></i> Catenación y Tipos de Carbono</h3>
+            <p>La <strong>Catenación</strong> es la capacidad de formar cadenas largas de átomos de carbono. Dependiendo de su posición, clasificamos los carbonos como:</p>
+            
+            <ul>
+                <li><strong>Primario:</strong> Unido a 1 solo carbono (ej. extremos de cadena).</li>
+                <li><strong>Secundario:</strong> Unido a 2 carbonos.</li>
+                <li><strong>Terciario:</strong> Unido a 3 carbonos.</li>
+                <li><strong>Cuaternario:</strong> Unido a 4 carbonos (puntos de ramificación total).</li>
+            </ul>
+        </section>
+
+        <section id="formulas" class="section">
+            <h2>Representación de Compuestos Orgánicos</h2>
+            <p>Debido a la complejidad de las moléculas orgánicas, utilizamos diferentes niveles de abstracción para representarlas:</p>
+
+            
+
+            <div class="formula-card">
+                <h3>1. Fórmula Molecular (Global)</h3>
+                <p>Indica el número total de átomos de cada elemento. Útil para cálculos de masa pero no muestra la estructura.</p>
+                <code>Ejemplo (Propano): C<sub>3</sub>H<sub>8</sub></code>
+            </div>
+
+            <div class="formula-card">
+                <h3>2. Fórmula Semidesarrollada</h3>
+                <p>Muestra los enlaces entre carbonos y agrupa los hidrógenos. Es el estándar en la mayoría de textos químicos.</p>
+                <code>Ejemplo: CH<sub>3</sub> — CH<sub>2</sub> — CH<sub>3</sub></code>
+            </div>
+
+            <div class="formula-card">
+                <h3>3. Fórmula Desarrollada (Estructural)</h3>
+                <p>Muestra todos los enlaces individuales (C-H y C-C). Permite visualizar la geometría completa.</p>
+            </div>
+
+            <div class="formula-card">
+                <h3>4. Fórmula Taquigráfica (Zig-Zag)</h3>
+                <p>Representa la cadena como líneas. Cada vértice es un carbono; los hidrógenos se omiten para claridad visual.</p>
+                <code>Ejemplo (Butano): /\/ (Una línea quebrada con 4 puntas que representan los 4 carbonos)</code>
+                
+
+[Image of skeletal structure of butane]
+
+            </div>
+        </section>
+
+        <section id="evaluacion" class="section">
+            <h2>Evaluación Certificada</h2>
+            <div id="login-eval" class="login-box">
+                <p>Ingresa tu Código ZipGrade para validar tu identidad.</p>
+                <input type="number" id="zip-eval" placeholder="Tu Código (Ej: 1020)">
+                <button class="action-btn" onclick="validarIngreso('evaluacion')">Iniciar Examen</button>
+                <div id="error-eval" style="color:var(--error); margin-top:10px; font-weight:bold;"></div>
+            </div>
+            <div id="content-eval" style="display:none;">
+                <div style="background:var(--btn-bg); padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <i class="fas fa-user"></i> <span id="nombre-estudiante-eval"></span>
+                </div>
+                <div id="contenedor-preguntas"></div>
+                <button class="action-btn" id="btn-enviar-eval" onclick="calificarEvaluacion()">Enviar Resultados</button>
+                <div id="resultado-evaluacion" class="resultado"></div>
+            </div>
+        </section>
+
+        <section id="juego" class="section">
+            <h2>Misión: Síntesis de Carbono</h2>
+            <div id="login-juego" class="login-box">
+                <input type="number" id="zip-juego" placeholder="Tu Código ZipGrade">
+                <button class="action-btn" onclick="validarIngreso('juego')">Activar Reactor</button>
+                <div id="error-juego" style="color:var(--error); margin-top:10px;"></div>
+            </div>
+            <div id="content-juego" style="display:none;">
+                <p id="pista-juego" style="color:var(--secondary); font-weight:bold;"></p>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <input type="number" id="inputGrupo" placeholder="Grupo" style="max-width:140px;">
+                    <input type="number" id="inputPeriodo" placeholder="Periodo" style="max-width:140px;">
+                </div>
+                <button class="action-btn" onclick="disparar()">Sintetizar Elemento</button>
+                <div id="resultadoJuego" class="resultado"></div>
+            </div>
+        </section>
+
+        <section id="admin" class="section">
+            <h2>Consola de Control</h2>
+            <div id="login-admin" class="login-box">
+                <input type="password" id="admin-pass" placeholder="Contraseña Docente">
+                <button class="action-btn" onclick="loginAdmin()">Acceder</button>
+                <div id="error-admin" style="color:var(--error); margin-top:10px;"></div>
+            </div>
+            <div id="content-admin" style="display:none;">
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button class="action-btn" style="background:var(--secondary)" onclick="descargarExcel()">Exportar Excel</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="admin-table" style="width:100%">
+                        <thead><tr><th>Código</th><th>Estudiante</th><th>Nota Eval</th><th>Misión</th></tr></thead>
+                        <tbody id="tbody-admin"></tbody>
+                    </table>
+                </div>
+                <div class="formula-card" style="margin-top:30px;">
+                    <h3>Importar Listado</h3>
+                    <input type="file" id="file-upload" accept=".xlsx">
+                    <button class="action-btn" onclick="importarEstudiantes()">Cargar a Nube</button>
+                    <div id="import-status"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+        // CONFIGURACIÓN FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCw4JnCCFHVogAEXncodxi9jnwigO7qUIA",
+            authDomain: "quimicaquest.firebaseapp.com",
+            projectId: "quimicaquest",
+            storageBucket: "quimicaquest.firebasestorage.app",
+            messagingSenderId: "796534851347",
+            appId: "1:796534851347:web:ae85716a8b612d889b3ce6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentStudent = { zip: null, nombre: null };
+
+        const bancoPreguntas = [
+            { p: "¿Cuál es la hibridación de un carbono con enlace triple?", o: ["sp3", "sp2", "sp", "sp4"], c: 2 },
+            { p: "¿Qué propiedad permite al carbono formar cadenas largas?", o: ["Solubilidad", "Catenación", "Electronegatividad", "Isomería"], c: 1 },
+            { p: "¿Cuál es el ángulo de enlace en la hibridación tetraédrica sp3?", o: ["120°", "180°", "109.5°", "90°"], c: 2 },
+            { p: "¿Qué tipo de carbono está unido a 3 átomos de carbono?", o: ["Primario", "Secundario", "Terciario", "Cuaternario"], c: 2 },
+            { p: "¿En qué año Friedrich Wöhler sintetizó la urea?", o: ["1828", "1905", "1789", "1850"], c: 0 }
+        ];
+
+        // --- EXPORTACIÓN DE FUNCIONES AL GLOBAL WINDOW ---
+        window.showSection = (id, btn) => {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
+            if(btn) btn.classList.add('active-nav');
+        };
+
+        window.validarIngreso = async (modulo) => {
+            const suf = modulo === 'evaluacion' ? 'eval' : 'juego';
+            const zipInput = document.getElementById(`zip-${suf}`).value.trim();
+            const errorDiv = document.getElementById(`error-${suf}`);
+            
+            if(!zipInput) { errorDiv.innerText = "Ingresa tu código."; return; }
+            errorDiv.style.color = "var(--accent)";
+            errorDiv.innerText = "Verificando en la base de datos...";
+
+            try {
+                // Verificar si existe el estudiante en la colección central 'estudiantes'
+                const sDoc = await getDoc(doc(db, "estudiantes", zipInput));
+                if(!sDoc.exists()) {
+                    errorDiv.style.color = "var(--error)";
+                    errorDiv.innerText = "Código no registrado en el curso.";
+                    return;
+                }
+
+                // Verificar si ya realizó la actividad en las colecciones de notas
+                const collName = modulo === 'evaluacion' ? "notas_eval" : "notas_mision";
+                const record = await getDoc(doc(db, collName, zipInput));
+                if(record.exists()) {
+                    errorDiv.style.color = "var(--error)";
+                    errorDiv.innerText = "Ya has completado esta actividad (1 intento permitido).";
+                    return;
+                }
+
+                currentStudent = { zip: zipInput, nombre: sDoc.data().nombre };
+                document.getElementById(`login-${suf}`).style.display = "none";
+                document.getElementById(`content-${suf}`).style.display = "block";
+                
+                if(modulo === 'evaluacion') renderExamen();
+                else window.iniciarMision();
+
+            } catch(e) { 
+                console.error(e);
+                errorDiv.innerText = "Error de conexión con Firebase."; 
+            }
+        };
+
+        function renderExamen() {
+            document.getElementById('nombre-estudiante-eval').innerText = currentStudent.nombre;
+            let html = "";
+            bancoPreguntas.forEach((q, i) => {
+                html += `<div class="pregunta-evaluacion"><p><strong>${i+1}. ${q.p}</strong></p>`;
+                q.o.forEach((opt, j) => {
+                    // Reemplazar sp3, sp2, sp en opciones para que se vean bien
+                    let optFormatted = opt.replace("sp3", "sp<sup>3</sup>").replace("sp2", "sp<sup>2</sup>");
+                    html += `<label><input type="radio" name="p${i}" value="${j}"> ${optFormatted}</label>`;
+                });
+                html += `</div>`;
+            });
+            document.getElementById('contenedor-preguntas').innerHTML = html;
+        }
+
+        window.calificarEvaluacion = async () => {
+            let aciertos = 0;
+            for(let i=0; i<bancoPreguntas.length; i++) {
+                const sel = document.querySelector(`input[name="p${i}"]:checked`);
+                if(sel && parseInt(sel.value) === bancoPreguntas[i].c) aciertos++;
+            }
+            
+            const res = document.getElementById('resultado-evaluacion');
+            res.style.display = "block";
+            res.innerText = "Guardando nota en servidor...";
+
+            try {
+                // Guarda en la colección separada notas_eval
+                await setDoc(doc(db, "notas_eval", currentStudent.zip), {
+                    nombre: currentStudent.nombre,
+                    nota: aciertos,
+                    fecha: new Date().toLocaleString()
+                });
+                res.className = "resultado hit";
+                res.innerHTML = `<i class="fas fa-check-circle"></i> Examen Guardado. Nota: ${aciertos} / 5`;
+                document.getElementById('btn-enviar-eval').style.display = "none";
+            } catch(e) { res.innerText = "Error al guardar nota."; }
+        };
+
+        window.iniciarMision = () => {
+            document.getElementById('pista-juego').innerText = "Pista: Soy el elemento fundamental de la vida (Grupo 14, Periodo 2).";
+        };
+
+        window.disparar = async () => {
+            const g = parseInt(document.getElementById('inputGrupo').value);
+            const p = parseInt(document.getElementById('inputPeriodo').value);
+            const res = document.getElementById('resultadoJuego');
+            res.style.display = "block";
+
+            if(g === 14 && p === 2) {
+                res.className = "resultado hit";
+                res.innerText = "¡Reactor Estable! Carbono sintetizado correctamente.";
+                // Guarda en la colección separada notas_mision
+                await setDoc(doc(db, "notas_mision", currentStudent.zip), {
+                    nombre: currentStudent.nombre,
+                    logro: "Sintetizó Carbono",
+                    fecha: new Date().toLocaleString()
+                });
+            } else {
+                res.className = "resultado miss";
+                res.innerText = "Coordenadas erróneas. El núcleo es inestable.";
+            }
+        };
+
+        window.loginAdmin = () => {
+            const pass = document.getElementById('admin-pass').value;
+            if(pass === "Profe2026") {
+                document.getElementById('login-admin').style.display = "none";
+                document.getElementById('content-admin').style.display = "block";
+                window.actualizarTablaAdmin();
+            } else {
+                document.getElementById('error-admin').innerText = "Contraseña de acceso docente incorrecta.";
+            }
+        };
+
+        window.actualizarTablaAdmin = async () => {
+            const tbody = document.getElementById('tbody-admin');
+            tbody.innerHTML = "Cargando...";
+            try {
+                const qEst = await getDocs(collection(db, "estudiantes"));
+                const qEva = await getDocs(collection(db, "notas_eval"));
+                const qMis = await getDocs(collection(db, "notas_mision"));
+                
+                let evals = {}; qEva.forEach(d => evals[d.id] = d.data().nota);
+                let mis = {}; qMis.forEach(d => mis[d.id] = "LOGRADO");
+
+                let html = "";
+                qEst.forEach(d => {
+                    html += `<tr><td>${d.id}</td><td>${d.data().nombre}</td>
+                    <td>${evals[d.id] !== undefined ? evals[d.id] : '-'}</td>
+                    <td>${mis[d.id] || '-'}</td></tr>`;
+                });
+                tbody.innerHTML = html || "<tr><td colspan='4'>No hay datos.</td></tr>";
+            } catch(e) { tbody.innerHTML = "Error cargando datos."; }
+        };
+
+        window.importarEstudiantes = async () => {
+            const fileInput = document.getElementById('file-upload');
+            const status = document.getElementById('import-status');
+            if(!fileInput.files[0]) return;
+            status.innerText = "Procesando...";
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+                for(let row of json) {
+                    if(row[0] && row[1]) {
+                        // Sube los estudiantes a la colección central 'estudiantes'
+                        await setDoc(doc(db, "estudiantes", row[0].toString()), { nombre: row[1] });
+                    }
+                }
+                status.innerText = "¡Listado subido con éxito!";
+                window.actualizarTablaAdmin();
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        };
+
+        window.descargarExcel = () => {
+            XLSX.writeFile(XLSX.utils.table_to_book(document.querySelector(".admin-table")), "Reporte_CarbonoQuest.xlsx");
+        };
+    </script>
+</body>
+</html>
