@@ -47,9 +47,29 @@
         .resultado { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; text-align: center; font-weight: bold; border: 2px solid transparent; }
         .hit { background: rgba(74, 222, 128, 0.2); color: var(--correct); border-color: var(--correct); }
         .miss { background: rgba(248, 113, 113, 0.2); color: var(--error); border-color: var(--error); }
+
+        /* DESTELLOS VISUALES */
+        #flash-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9999; pointer-events: none; opacity: 0;
+        }
+        .flash-active-success { animation: successFlash 0.6s ease-out forwards; }
+        .flash-active-error { animation: errorFlash 0.6s ease-out forwards; }
+        @keyframes successFlash {
+            0% { opacity: 0; background-color: rgba(255, 255, 255, 0.8); }
+            15% { opacity: 1; background-color: rgba(74, 222, 128, 0.5); }
+            100% { opacity: 0; background-color: rgba(74, 222, 128, 0); }
+        }
+        @keyframes errorFlash {
+            0% { opacity: 0; background-color: rgba(255, 255, 255, 0.8); }
+            15% { opacity: 1; background-color: rgba(248, 113, 113, 0.5); }
+            100% { opacity: 0; background-color: rgba(248, 113, 113, 0); }
+        }
     </style>
 </head>
 <body>
+
+    <div id="flash-overlay"></div>
 
     <header>
         <h1>CarbonoQuest PRO</h1>
@@ -75,8 +95,10 @@
             <h3><i class="fas fa-project-diagram"></i> Hibridación de Orbitales</h3>
             <p>El carbono hibrida sus orbitales para adaptarse a diferentes geometrías moleculares:</p>
             
+            
 
 [Image of carbon hybridization sp3 sp2 sp]
+
 
             <table>
                 <tr><th>Hibridación</th><th>Enlaces</th><th>Geometría</th><th>Ángulo</th></tr>
@@ -124,8 +146,10 @@
                 <p>Representa la cadena como líneas. Cada vértice es un carbono; los hidrógenos se omiten para claridad visual.</p>
                 <code>Ejemplo (Butano): /\/ (Una línea quebrada con 4 puntas que representan los 4 carbonos)</code>
                 
+                
 
 [Image of skeletal structure of butane]
+
 
             </div>
         </section>
@@ -156,12 +180,18 @@
                 <div id="error-juego" style="color:var(--error); margin-top:10px;"></div>
             </div>
             <div id="content-juego" style="display:none;">
-                <p id="pista-juego" style="color:var(--secondary); font-weight:bold;"></p>
-                <div style="display:flex; gap:10px; justify-content:center;">
-                    <input type="number" id="inputGrupo" placeholder="Grupo" style="max-width:140px;">
-                    <input type="number" id="inputPeriodo" placeholder="Periodo" style="max-width:140px;">
+                <p style="text-align:center; color:var(--accent); margin-bottom: 5px;" id="progreso-misiones">Misión 1 de 5</p>
+                <p id="pista-juego" style="color:var(--secondary); font-size:1.1rem; text-align:center; margin-bottom:20px;"></p>
+                
+                <div style="display:flex; justify-content:center; width: 100%;">
+                    <select id="inputRespuesta" style="padding: 14px; border-radius: 10px; background: #020617; color: white; border: 2px solid var(--btn-bg); outline: none; width: 100%; max-width: 400px; font-size: 1rem;">
+                        </select>
                 </div>
-                <button class="action-btn" onclick="disparar()">Sintetizar Elemento</button>
+                
+                <div style="display:flex; justify-content:center; margin-top: 20px;">
+                     <button class="action-btn" id="btn-disparar" onclick="disparar()">Verificar Respuesta</button>
+                </div>
+               
                 <div id="resultadoJuego" class="resultado"></div>
             </div>
         </section>
@@ -220,6 +250,52 @@
             { p: "¿En qué año Friedrich Wöhler sintetizó la urea?", o: ["1828", "1905", "1789", "1850"], c: 0 }
         ];
 
+        // --- BANCO DE 30 MISIONES ---
+        const bancoMisionesTotal = [
+            { pista: "Un carbono unido a un solo átomo de carbono se clasifica como:", opciones: ["Primario", "Secundario", "Terciario", "Cuaternario"], correcta: "Primario" },
+            { pista: "Un carbono unido a cuatro átomos de carbono se clasifica como:", opciones: ["Primario", "Secundario", "Terciario", "Cuaternario"], correcta: "Cuaternario" },
+            { pista: "En el propano (CH3-CH2-CH3), ¿qué tipo de carbono es el del centro?", opciones: ["Primario", "Secundario", "Terciario", "Cuaternario"], correcta: "Secundario" },
+            { pista: "Si un carbono está unido a tres carbonos, se clasifica como:", opciones: ["Primario", "Secundario", "Terciario", "Cuaternario"], correcta: "Terciario" },
+            { pista: "¿Qué tipo de fórmula muestra todos los enlaces (C-C y C-H) de la molécula de forma detallada?", opciones: ["Molecular", "Semidesarrollada", "Desarrollada", "Zig-Zag"], correcta: "Desarrollada" },
+            { pista: "La fórmula global como C3H8, que solo muestra el total de átomos, se llama:", opciones: ["Molecular", "Semidesarrollada", "Desarrollada", "Estructural"], correcta: "Molecular" },
+            { pista: "¿Qué fórmula agrupa los hidrógenos y muestra solo los enlaces C-C (ej. CH3-CH3)?", opciones: ["Molecular", "Semidesarrollada", "Desarrollada", "Esqueleto"], correcta: "Semidesarrollada" },
+            { pista: "¿Qué tipo de fórmula usa vértices y líneas, omitiendo escribir explícitamente los C y los H?", opciones: ["Molecular", "Semidesarrollada", "Desarrollada", "Taquigráfica (Zig-Zag)"], correcta: "Taquigráfica (Zig-Zag)" },
+            { pista: "Si un alcano tiene 5 carbonos (Fórmula general: CnH2n+2), ¿cuántos hidrógenos tiene?", opciones: ["10", "12", "14", "8"], correcta: "12" },
+            { pista: "Si un alcano tiene 2 carbonos (Fórmula general: CnH2n+2), ¿cuántos hidrógenos tiene?", opciones: ["4", "6", "8", "10"], correcta: "6" },
+            { pista: "Si un alcano tiene 4 carbonos (Fórmula general: CnH2n+2), ¿cuántos hidrógenos tiene?", opciones: ["8", "10", "12", "14"], correcta: "10" },
+            { pista: "Si un alceno tiene 3 carbonos (Fórmula general: CnH2n), ¿cuántos hidrógenos tiene?", opciones: ["4", "6", "8", "10"], correcta: "6" },
+            { pista: "Si un alquino tiene 2 carbonos (Fórmula general: CnH2n-2), ¿cuántos hidrógenos tiene?", opciones: ["2", "4", "6", "8"], correcta: "2" },
+            { pista: "¿Cuántos enlaces covalentes forma siempre el átomo de carbono en estado neutro?", opciones: ["2", "3", "4", "5"], correcta: "4" },
+            { pista: "La hibridación que forma puros enlaces simples con geometría tetraédrica es:", opciones: ["sp", "sp2", "sp3", "sp4"], correcta: "sp3" },
+            { pista: "La hibridación presente en un doble enlace (geometría trigonal plana) es:", opciones: ["sp", "sp2", "sp3", "sp4"], correcta: "sp2" },
+            { pista: "La hibridación característica de un carbono con un triple enlace (geometría lineal) es:", opciones: ["sp", "sp2", "sp3", "sp4"], correcta: "sp" },
+            { pista: "El ángulo de enlace característico en la hibridación sp3 es aproximadamente:", opciones: ["90°", "109.5°", "120°", "180°"], correcta: "109.5°" },
+            { pista: "El ángulo de enlace característico en la hibridación sp2 es:", opciones: ["90°", "109.5°", "120°", "180°"], correcta: "120°" },
+            { pista: "El ángulo de enlace característico en la hibridación sp es:", opciones: ["90°", "109.5°", "120°", "180°"], correcta: "180°" },
+            { pista: "La propiedad del carbono de unirse a otros átomos de carbono para formar largas cadenas se llama:", opciones: ["Solubilidad", "Electronegatividad", "Catenación", "Isomería"], correcta: "Catenación" },
+            { pista: "Una cadena de carbonos que tiene extremos libres (que no forma un anillo cerrado) se conoce como:", opciones: ["Abierta (Acíclica)", "Cerrada (Cíclica)", "Aromática", "Homogénea"], correcta: "Abierta (Acíclica)" },
+            { pista: "Una cadena de carbonos que se cierra sobre sí misma formando una figura geométrica se denomina:", opciones: ["Abierta", "Cíclica", "Lineal", "Ramificada"], correcta: "Cíclica" },
+            { pista: "Si la cadena principal de carbonos tiene 'ramas' o sustituyentes laterales, se clasifica como:", opciones: ["Lineal", "Normal", "Ramificada", "Saturada"], correcta: "Ramificada" },
+            { pista: "Un hidrocarburo que contiene EXCLUSIVAMENTE enlaces simples C-C se clasifica como:", opciones: ["Saturado", "Insaturado", "Aromático", "Radical"], correcta: "Saturado" },
+            { pista: "Un hidrocarburo que contiene al menos un enlace doble o triple C-C se clasifica como:", opciones: ["Saturado", "Insaturado", "Cíclico", "Alcano"], correcta: "Insaturado" },
+            { pista: "Además del átomo de carbono, ¿cuál es el otro elemento principal que compone los hidrocarburos?", opciones: ["Oxígeno", "Nitrógeno", "Hidrógeno", "Azufre"], correcta: "Hidrógeno" },
+            { pista: "En la estructura CH2=CH2 (eteno), ¿qué tipo de enlace hay entre los carbonos?", opciones: ["Simple", "Doble", "Triple", "Iónico"], correcta: "Doble" },
+            { pista: "En la estructura HC≡CH (etino), ¿qué tipo de enlace hay entre los carbonos?", opciones: ["Simple", "Doble", "Triple", "Iónico"], correcta: "Triple" },
+            { pista: "La forma (geometría espacial) de la molécula del gas metano (CH4) es:", opciones: ["Lineal", "Trigonal Plana", "Tetraédrica", "Octaédrica"], correcta: "Tetraédrica" }
+        ];
+
+        let listaMisiones = [];
+        let misionActual = 0;
+        let aciertosMision = 0; // Para rastrear las respuestas correctas
+
+        // --- FUNCIONES VISUALES (DESTELLO) ---
+        function triggerFlash(tipo) {
+            const flash = document.getElementById('flash-overlay');
+            flash.className = ''; 
+            void flash.offsetWidth; // Forzar reflow para reiniciar la animación
+            flash.classList.add(tipo === 'success' ? 'flash-active-success' : 'flash-active-error');
+        }
+
         // --- EXPORTACIÓN DE FUNCIONES AL GLOBAL WINDOW ---
         window.showSection = (id, btn) => {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -274,7 +350,6 @@
             bancoPreguntas.forEach((q, i) => {
                 html += `<div class="pregunta-evaluacion"><p><strong>${i+1}. ${q.p}</strong></p>`;
                 q.o.forEach((opt, j) => {
-                    // Reemplazar sp3, sp2, sp en opciones para que se vean bien
                     let optFormatted = opt.replace("sp3", "sp<sup>3</sup>").replace("sp2", "sp<sup>2</sup>");
                     html += `<label><input type="radio" name="p${i}" value="${j}"> ${optFormatted}</label>`;
                 });
@@ -308,28 +383,83 @@
         };
 
         window.iniciarMision = () => {
-            document.getElementById('pista-juego').innerText = "Pista: Soy el elemento fundamental de la vida (Grupo 14, Periodo 2).";
+            // Seleccionar 5 preguntas aleatorias del banco de 30
+            listaMisiones = [...bancoMisionesTotal].sort(() => 0.5 - Math.random()).slice(0, 5);
+            misionActual = 0;
+            aciertosMision = 0; // Reiniciar puntuación
+            cargarPistaMision();
         };
 
-        window.disparar = async () => {
-            const g = parseInt(document.getElementById('inputGrupo').value);
-            const p = parseInt(document.getElementById('inputPeriodo').value);
-            const res = document.getElementById('resultadoJuego');
-            res.style.display = "block";
+        function cargarPistaMision() {
+            document.getElementById('progreso-misiones').innerText = `Misión ${misionActual + 1} de 5`;
+            document.getElementById('pista-juego').innerText = listaMisiones[misionActual].pista;
+            
+            // Renderizar las opciones aleatoriamente en el select
+            let opcionesHtml = '<option value="">Selecciona una respuesta...</option>';
+            let opcionesMezcladas = [...listaMisiones[misionActual].opciones].sort(() => 0.5 - Math.random());
+            opcionesMezcladas.forEach(op => {
+                opcionesHtml += `<option value="${op}">${op}</option>`;
+            });
+            
+            document.getElementById('inputRespuesta').innerHTML = opcionesHtml;
+            document.getElementById('resultadoJuego').style.display = "none";
+        }
 
-            if(g === 14 && p === 2) {
-                res.className = "resultado hit";
-                res.innerText = "¡Reactor Estable! Carbono sintetizado correctamente.";
-                // Guarda en la colección separada notas_mision
-                await setDoc(doc(db, "notas_mision", currentStudent.zip), {
-                    nombre: currentStudent.nombre,
-                    logro: "Sintetizó Carbono",
-                    fecha: new Date().toLocaleString()
-                });
-            } else {
+        window.disparar = async () => {
+            const respuestaSeleccionada = document.getElementById('inputRespuesta').value;
+            const res = document.getElementById('resultadoJuego');
+            const btn = document.getElementById('btn-disparar');
+            
+            if(!respuestaSeleccionada) {
+                res.style.display = "block";
                 res.className = "resultado miss";
-                res.innerText = "Coordenadas erróneas. El núcleo es inestable.";
+                res.innerText = "Por favor, selecciona una respuesta.";
+                return;
             }
+
+            res.style.display = "block";
+            btn.disabled = true; // Deshabilita el botón mientras se procesa y avanza
+            const misionObj = listaMisiones[misionActual];
+
+            if(respuestaSeleccionada === misionObj.correcta) {
+                triggerFlash('success');
+                res.className = "resultado hit";
+                res.innerText = "¡Correcto!";
+                aciertosMision++;
+            } else {
+                triggerFlash('error');
+                res.className = "resultado miss";
+                res.innerText = `Incorrecto. La respuesta correcta era: ${misionObj.correcta}`;
+            }
+
+            // Esperar 2 segundos para que el estudiante vea la retroalimentación y luego avanzar
+            setTimeout(async () => {
+                misionActual++;
+                if(misionActual < listaMisiones.length) {
+                    cargarPistaMision();
+                    btn.disabled = false;
+                } else {
+                    // Terminó todas las misiones
+                    res.className = "resultado hit";
+                    res.innerText = "¡Evaluación completada! Guardando progreso...";
+                    try {
+                        // Guarda en la colección separada notas_mision
+                        await setDoc(doc(db, "notas_mision", currentStudent.zip), {
+                            nombre: currentStudent.nombre,
+                            logro: `Completó Evaluación (${aciertosMision}/5 correctas)`,
+                            fecha: new Date().toLocaleString()
+                        });
+                        res.innerHTML = `<i class="fas fa-check-circle"></i> ¡Misión Finalizada! Obtuviste ${aciertosMision} de 5 respuestas correctas. Progreso Guardado.`;
+                        
+                        // Ocultar inputs y botón
+                        document.getElementById('inputRespuesta').style.display = "none";
+                        btn.style.display = "none";
+                    } catch(errorFirebase) {
+                        res.className = "resultado miss";
+                        res.innerText = "Error guardando en la base de datos.";
+                    }
+                }
+            }, 2000);
         };
 
         window.loginAdmin = () => {
@@ -352,13 +482,13 @@
                 const qMis = await getDocs(collection(db, "notas_mision"));
                 
                 let evals = {}; qEva.forEach(d => evals[d.id] = d.data().nota);
-                let mis = {}; qMis.forEach(d => mis[d.id] = "LOGRADO");
+                let mis = {}; qMis.forEach(d => mis[d.id] = d.data().logro);
 
                 let html = "";
                 qEst.forEach(d => {
                     html += `<tr><td>${d.id}</td><td>${d.data().nombre}</td>
                     <td>${evals[d.id] !== undefined ? evals[d.id] : '-'}</td>
-                    <td>${mis[d.id] || '-'}</td></tr>`;
+                    <td>${mis[d.id] ? mis[d.id] : '-'}</td></tr>`;
                 });
                 tbody.innerHTML = html || "<tr><td colspan='4'>No hay datos.</td></tr>";
             } catch(e) { tbody.innerHTML = "Error cargando datos."; }
