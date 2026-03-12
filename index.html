@@ -65,6 +65,14 @@
             15% { opacity: 1; background-color: rgba(248, 113, 113, 0.5); }
             100% { opacity: 0; background-color: rgba(248, 113, 113, 0); }
         }
+
+        /* TABLA DE RÉCORDS AVANZADA */
+        .tab-btn { margin-top: 0; max-width: 200px; padding: 10px 15px; font-size: 0.95rem; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .tab-btn:active { transform: scale(0.95); }
+        .leaderboard-scroll { max-height: 420px; overflow-y: auto; border-radius: 10px; padding-right: 8px; background: var(--bg-color); border: 1px solid var(--btn-bg); padding: 10px; }
+        .leaderboard-table { width: 100%; margin-top: 0; border-collapse: collapse; display: table; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px; border-bottom: 1px solid var(--btn-bg); text-align: center; font-size: 0.95rem; }
+        .leaderboard-table th { color: var(--accent); text-transform: uppercase; font-size: 0.85rem; position: sticky; top: 0; background: var(--panel-bg); z-index: 2; border: none; }
     </style>
 </head>
 <body>
@@ -81,6 +89,7 @@
         <button onclick="showSection('formulas', this)">Fórmulas</button>
         <button onclick="showSection('evaluacion', this)" class="btn-eval">Examen</button>
         <button onclick="showSection('juego', this)" class="btn-game">Misión</button>
+        <button onclick="showSection('records', this); loadPanelRecords('evaluacion');" style="background-color: #facc15; color: #0f172a;">🏆 Récords</button>
         <button onclick="showSection('admin', this)">Admin</button>
     </nav>
 
@@ -95,11 +104,6 @@
             <h3><i class="fas fa-project-diagram"></i> Hibridación de Orbitales</h3>
             <p>El carbono hibrida sus orbitales para adaptarse a diferentes geometrías moleculares:</p>
             
-            
-
-[Image of carbon hybridization sp3 sp2 sp]
-
-
             <table>
                 <tr><th>Hibridación</th><th>Enlaces</th><th>Geometría</th><th>Ángulo</th></tr>
                 <tr><td><strong>sp<sup>3</sup></strong></td><td>4 Sencillos (&sigma;)</td><td>Tetraédrica</td><td>109.5°</td></tr>
@@ -122,8 +126,6 @@
             <h2>Representación de Compuestos Orgánicos</h2>
             <p>Debido a la complejidad de las moléculas orgánicas, utilizamos diferentes niveles de abstracción para representarlas:</p>
 
-            
-
             <div class="formula-card">
                 <h3>1. Fórmula Molecular (Global)</h3>
                 <p>Indica el número total de átomos de cada elemento. Útil para cálculos de masa pero no muestra la estructura.</p>
@@ -145,12 +147,6 @@
                 <h3>4. Fórmula Taquigráfica (Zig-Zag)</h3>
                 <p>Representa la cadena como líneas. Cada vértice es un carbono; los hidrógenos se omiten para claridad visual.</p>
                 <code>Ejemplo (Butano): /\/ (Una línea quebrada con 4 puntas que representan los 4 carbonos)</code>
-                
-                
-
-[Image of skeletal structure of butane]
-
-
             </div>
         </section>
 
@@ -196,6 +192,32 @@
             </div>
         </section>
 
+        <section id="records" class="section" style="padding: 25px;">
+            <h2 style="text-align:center; border:none; padding:0; margin-bottom: 20px;">🏆 Salón de la Fama</h2>
+            
+            <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px;">
+                <button id="main-tab-eval" class="tab-btn" onclick="loadPanelRecords('evaluacion')" style="background:var(--correct); color:#0f172a;"><i class="fas fa-file-signature"></i> Examen</button>
+                <button id="main-tab-mision" class="tab-btn" onclick="loadPanelRecords('mision')" style="background:var(--btn-bg); color:var(--text-color);"><i class="fas fa-rocket"></i> Misiones</button>
+            </div>
+            
+            <h3 id="panel-leaderboard-subtitle" style="color:var(--text-color); margin-bottom:15px; font-size:1.1rem; letter-spacing:1px; text-align:center; display:block; justify-content:center;">TOP 50 ESTUDIANTES</h3>
+            
+            <div class="leaderboard-scroll">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Posición</th>
+                            <th style="width: 50%;">Estudiante</th>
+                            <th style="width: 30%;">Puntaje / Aciertos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="panel-leaderboard-body">
+                        <tr><td colspan="3">Cargando datos del laboratorio...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section id="admin" class="section">
             <h2>Consola de Control</h2>
             <div id="login-admin" class="login-box">
@@ -225,7 +247,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
         // CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
@@ -286,13 +308,13 @@
 
         let listaMisiones = [];
         let misionActual = 0;
-        let aciertosMision = 0; // Para rastrear las respuestas correctas
+        let aciertosMision = 0; 
 
         // --- FUNCIONES VISUALES (DESTELLO) ---
         function triggerFlash(tipo) {
             const flash = document.getElementById('flash-overlay');
             flash.className = ''; 
-            void flash.offsetWidth; // Forzar reflow para reiniciar la animación
+            void flash.offsetWidth; 
             flash.classList.add(tipo === 'success' ? 'flash-active-success' : 'flash-active-error');
         }
 
@@ -314,7 +336,6 @@
             errorDiv.innerText = "Verificando en la base de datos...";
 
             try {
-                // Verificar si existe el estudiante en la colección central 'estudiantes'
                 const sDoc = await getDoc(doc(db, "estudiantes", zipInput));
                 if(!sDoc.exists()) {
                     errorDiv.style.color = "var(--error)";
@@ -322,8 +343,7 @@
                     return;
                 }
 
-                // Verificar si ya realizó la actividad en las colecciones de notas
-                const collName = modulo === 'evaluacion' ? "notas_eval" : "notas_mision";
+                const collName = modulo === 'evaluacion' ? "carbon_eval" : "carbon_misi";
                 const record = await getDoc(doc(db, collName, zipInput));
                 if(record.exists()) {
                     errorDiv.style.color = "var(--error)";
@@ -370,8 +390,7 @@
             res.innerText = "Guardando nota en servidor...";
 
             try {
-                // Guarda en la colección separada notas_eval
-                await setDoc(doc(db, "notas_eval", currentStudent.zip), {
+                await setDoc(doc(db, "carbon_eval", currentStudent.zip), {
                     nombre: currentStudent.nombre,
                     nota: aciertos,
                     fecha: new Date().toLocaleString()
@@ -383,10 +402,9 @@
         };
 
         window.iniciarMision = () => {
-            // Seleccionar 5 preguntas aleatorias del banco de 30
             listaMisiones = [...bancoMisionesTotal].sort(() => 0.5 - Math.random()).slice(0, 5);
             misionActual = 0;
-            aciertosMision = 0; // Reiniciar puntuación
+            aciertosMision = 0; 
             cargarPistaMision();
         };
 
@@ -394,7 +412,6 @@
             document.getElementById('progreso-misiones').innerText = `Misión ${misionActual + 1} de 5`;
             document.getElementById('pista-juego').innerText = listaMisiones[misionActual].pista;
             
-            // Renderizar las opciones aleatoriamente en el select
             let opcionesHtml = '<option value="">Selecciona una respuesta...</option>';
             let opcionesMezcladas = [...listaMisiones[misionActual].opciones].sort(() => 0.5 - Math.random());
             opcionesMezcladas.forEach(op => {
@@ -418,7 +435,7 @@
             }
 
             res.style.display = "block";
-            btn.disabled = true; // Deshabilita el botón mientras se procesa y avanza
+            btn.disabled = true; 
             const misionObj = listaMisiones[misionActual];
 
             if(respuestaSeleccionada === misionObj.correcta) {
@@ -432,26 +449,22 @@
                 res.innerText = `Incorrecto. La respuesta correcta era: ${misionObj.correcta}`;
             }
 
-            // Esperar 2 segundos para que el estudiante vea la retroalimentación y luego avanzar
             setTimeout(async () => {
                 misionActual++;
                 if(misionActual < listaMisiones.length) {
                     cargarPistaMision();
                     btn.disabled = false;
                 } else {
-                    // Terminó todas las misiones
                     res.className = "resultado hit";
                     res.innerText = "¡Evaluación completada! Guardando progreso...";
                     try {
-                        // Guarda en la colección separada notas_mision
-                        await setDoc(doc(db, "notas_mision", currentStudent.zip), {
+                        await setDoc(doc(db, "carbon_misi", currentStudent.zip), {
                             nombre: currentStudent.nombre,
                             logro: `Completó Evaluación (${aciertosMision}/5 correctas)`,
                             fecha: new Date().toLocaleString()
                         });
                         res.innerHTML = `<i class="fas fa-check-circle"></i> ¡Misión Finalizada! Obtuviste ${aciertosMision} de 5 respuestas correctas. Progreso Guardado.`;
                         
-                        // Ocultar inputs y botón
                         document.getElementById('inputRespuesta').style.display = "none";
                         btn.style.display = "none";
                     } catch(errorFirebase) {
@@ -460,6 +473,88 @@
                     }
                 }
             }, 2000);
+        };
+
+        // --- SISTEMA DE RÉCORDS UNIFICADO CON PESTAÑAS ---
+        window.loadPanelRecords = async (tab) => {
+            const btnEval = document.getElementById('main-tab-eval');
+            const btnMision = document.getElementById('main-tab-mision');
+            const subtitle = document.getElementById('panel-leaderboard-subtitle');
+            const body = document.getElementById('panel-leaderboard-body');
+
+            // Actualización visual de la pestaña activa
+            if (tab === 'evaluacion') {
+                btnEval.style.background = 'var(--correct)';
+                btnEval.style.color = '#0f172a';
+                btnMision.style.background = 'var(--btn-bg)';
+                btnMision.style.color = 'var(--text-color)';
+                subtitle.innerText = 'EVALUACIÓN CERTIFICADA (TOP 50)';
+            } else {
+                btnMision.style.background = 'var(--secondary)';
+                btnMision.style.color = '#0f172a';
+                btnEval.style.background = 'var(--btn-bg)';
+                btnEval.style.color = 'var(--text-color)';
+                subtitle.innerText = 'MISIONES DE SÍNTESIS (TOP 50)';
+            }
+
+            body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Cargando datos del laboratorio...</td></tr>";
+
+            try {
+                let recordsArr = [];
+
+                if (tab === 'evaluacion') {
+                    // Consulta a la colección de Evaluación (Examen)
+                    const qEval = query(collection(db, "carbon_eval"), orderBy("nota", "desc"), limit(50));
+                    const snapEval = await getDocs(qEval);
+                    snapEval.forEach((doc) => {
+                        recordsArr.push({ nombre: doc.data().nombre, nota: doc.data().nota });
+                    });
+                } else {
+                    // Consulta a la colección de Misiones
+                    const snapMision = await getDocs(collection(db, "carbon_misi"));
+                    snapMision.forEach(doc => {
+                        let data = doc.data();
+                        let aciertos = 0;
+                        if(data.logro) {
+                            let match = data.logro.match(/(\d+)\/5/);
+                            if(match) {
+                                aciertos = parseInt(match[1]);
+                            } else if(data.logro.includes("Completó") || data.logro.includes("(5/5")) {
+                                aciertos = 5;
+                            }
+                        }
+                        recordsArr.push({nombre: data.nombre, nota: aciertos});
+                    });
+                    
+                    // Ordenamos localmente de mayor a menor y limitamos a 50
+                    recordsArr.sort((a,b) => b.nota - a.nota);
+                    recordsArr = recordsArr.slice(0, 50);
+                }
+
+                let html = "";
+                let pos = 1;
+
+                recordsArr.forEach(data => {
+                    let medalla = pos === 1 ? '🥇' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : pos));
+                    let isTop3 = pos <= 3;
+                    let colorNota = tab === 'evaluacion' ? 'var(--correct)' : 'var(--secondary)';
+                    
+                    html += `
+                        <tr style="${isTop3 ? 'font-weight:bold; font-size:1.05rem;' : ''}">
+                            <td style="text-align:center;">${medalla}</td>
+                            <td>${data.nombre}</td>
+                            <td style="text-align:center; color:${colorNota}; font-weight:bold;">${data.nota} / 5</td>
+                        </tr>
+                    `;
+                    pos++;
+                });
+
+                body.innerHTML = html || "<tr><td colspan='3' style='text-align:center;'>Aún no hay récords registrados. ¡Sé el primero!</td></tr>";
+
+            } catch (e) {
+                console.error("Error cargando récords:", e);
+                body.innerHTML = "<tr><td colspan='3' style='text-align:center; color:var(--error);'>Error al cargar.</td></tr>";
+            }
         };
 
         window.loginAdmin = () => {
@@ -478,8 +573,8 @@
             tbody.innerHTML = "Cargando...";
             try {
                 const qEst = await getDocs(collection(db, "estudiantes"));
-                const qEva = await getDocs(collection(db, "notas_eval"));
-                const qMis = await getDocs(collection(db, "notas_mision"));
+                const qEva = await getDocs(collection(db, "carbon_eval"));
+                const qMis = await getDocs(collection(db, "carbon_misi"));
                 
                 let evals = {}; qEva.forEach(d => evals[d.id] = d.data().nota);
                 let mis = {}; qMis.forEach(d => mis[d.id] = d.data().logro);
@@ -506,7 +601,6 @@
                 const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
                 for(let row of json) {
                     if(row[0] && row[1]) {
-                        // Sube los estudiantes a la colección central 'estudiantes'
                         await setDoc(doc(db, "estudiantes", row[0].toString()), { nombre: row[1] });
                     }
                 }
